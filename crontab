@@ -1,0 +1,1 @@
+0 21 * * * simon (cd /dvol/git/solardb-backup; python3 ./solardb-backup.py) >> /dvol/log/solar-backup.log 2>&1
