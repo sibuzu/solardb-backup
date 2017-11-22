@@ -80,6 +80,7 @@ if __name__ == '__main__':
     dstr = "{}{:02}{:02}".format(dt.year, dt.month, dt.day)
     print("{:%Y-%m-%d %H:%M:%S}: backup db of {}".format(datetime.now(),  dstr))
 
+    '''
     rawdata = firebaseRaw.get('/', 'rawdata')
     powerdata = firebaseDb.get('/', '')
     dpath = basepath + dstr[:6]
@@ -112,5 +113,8 @@ if __name__ == '__main__':
         pklfile = dpath + '/' + dstr + '-alarmlog.pkl' 
         with open(pklfile, 'wb') as fh:
             pickle.dump(mydata, fh)
-    
+    '''
 
+    command = 'git add . && git commit -am "{}" && git push'.format(dstr)
+    print(command)
+    os.system(command)
