@@ -162,9 +162,9 @@ if __name__ == '__main__':
             pickle.dump(mydata, fh)
 
     # Clear Data
-    power_dt = dt - timedelta(days=8)
+    power_dt = dt - timedelta(days=15)
     alarm_dt = dt - timedelta(days=3)
-    sunshine_dt = dt - timedelta(days=8)
+    sunshine_dt = dt - timedelta(days=15)
     rawdata_dt = dt - timedelta(days=3)
 
     n = clearRawdata(rawdata_dt, rawdata)
