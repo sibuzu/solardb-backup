@@ -48,7 +48,7 @@ def getSunshine(mydata, dt, powerdata):
         x1[station] = {}
         x2 = x1[station]
         for timestamp, data in dates.items():
-            if timestamp[:] == dt:
+            if timestamp == dt:
                 x2[dt] = data
                 dataCount += 1
     return dataCount
@@ -67,6 +67,53 @@ def getAlarmlog(mydata, dt, powerdata):
                 dataCount += 1
     return dataCount
 
+def clearRawdata(dt, rawdata):
+    dataCount = 0
+    dstr = "{}{:02}{:02}".format(dt.year, dt.month, dt.day)
+    for station, invs in rawdata.items():
+        for inv, items in invs.items():
+            for dkey in list(items.keys()):
+                if dkey < dstr:
+                    del items[dkey]
+                    dataCount += 1
+
+    return dataCount
+
+def clearSunshine(dt, powerdata):
+    dataCount = 0
+    dstr = "{}{:02}{:02}".format(dt.year, dt.month, dt.day)
+    for station, items in powerdata["sunshine"].items():
+        for dkey in list(items.keys()):
+            if dkey < dstr:
+                del items[dkey]
+                dataCount += 1
+
+    return dataCount
+
+def clearAlarmlog(dt, powerdata):
+    dataCount = 0
+    dstr = "{}{:02}{:02}".format(dt.year, dt.month, dt.day)
+    for station, items in powerdata["alarmlog"].items():
+        for dkey in list(items.keys()):
+            tstr = dkey[:4] + dkey[5:7] + dkey[8:10]
+            if tstr < dstr:
+                del items[dkey]
+                dataCount += 1
+
+    return dataCount
+
+def clearPower(dt, powerdata):
+    dataCount = 0
+    dstr = "{}{:02}{:02}".format(dt.year, dt.month, dt.day)
+    for station, items in powerdata["power"].items():
+        for dkey, invs in items.items():
+            if dkey < dstr:
+                for ikey in list(invs.keys()):
+                    if ikey!='total':
+                        del invs[ikey]
+                        dataCount += 1 
+    return dataCount
+
 if __name__ == '__main__':
     n = len(sys.argv)
     if n == 1:
@@ -80,9 +127,9 @@ if __name__ == '__main__':
     dstr = "{}{:02}{:02}".format(dt.year, dt.month, dt.day)
     print("{:%Y-%m-%d %H:%M:%S}: backup db of {}".format(datetime.now(),  dstr))
 
-    '''
     rawdata = firebaseRaw.get('/', 'rawdata')
     powerdata = firebaseDb.get('/', '')
+
     dpath = basepath + dstr[:6]
     os.makedirs(dpath, exist_ok=True)
         
@@ -113,7 +160,29 @@ if __name__ == '__main__':
         pklfile = dpath + '/' + dstr + '-alarmlog.pkl' 
         with open(pklfile, 'wb') as fh:
             pickle.dump(mydata, fh)
-    '''
+
+    # Clear Data
+    power_dt = dt - timedelta(days=8)
+    alarm_dt = dt - timedelta(days=3)
+    sunshine_dt = dt - timedelta(days=8)
+    rawdata_dt = dt - timedelta(days=3)
+
+    n = clearRawdata(rawdata_dt, rawdata)
+    # print(rawdata["正霆"]["inv01"].keys())
+    if n > 0:
+        firebaseRaw.put('/', 'rawdata', rawdata)
+
+    n = clearSunshine(sunshine_dt, powerdata)
+    if n > 0:
+        firebaseDb.put('/', 'sunshine', powerdata["sunshine"])
+
+    n = clearAlarmlog(alarm_dt, powerdata)
+    if n > 0:
+        firebaseDb.put('/', 'alarmlog', powerdata["alarmlog"])
+
+    n = clearPower(power_dt, powerdata)
+    if n > 0:
+        firebaseDb.put('/', 'power', powerdata["power"])
 
     command = 'git add . && git commit -am "{}" && git push'.format(dstr)
     print(command)
